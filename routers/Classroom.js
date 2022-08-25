@@ -1,21 +1,23 @@
 const router = require('express').Router();
-const Classroom = require('../models/classroom');
 const Teacher = require('../models/Teacher');
 const Attendence = require('../models/Attendence');
+const classroom = require('../models/classroom');
 
 // Create a Classroom
 router.post('/:id', async(req,res)=>{
-      const Room = await Classroom.findOne({RoomId:req.body.RoomId});
+      const Room = await classroom.findOne({RoomId:req.body.RoomId});
+      const teacher = await Teacher.findById(req.params.id);
       if(Room){
         res.send("RoomId Is Already In Use");
       }else{
-        const NewRoom = new Classroom({
+        try { 
+        const NewRoom = new classroom({
             RoomName:req.body.name,
-            userId:req.params.id,
+            AdminTeacherId:req.params.id,
             RoomId:req.body.RoomId,
-        });
-        try {            
+        });       
             const data = await NewRoom.save();
+           await teacher.updateOne({$push:{ClassRooms:data._id}});
             res.send(data);
         } catch (error) {
             res.send(error);
@@ -28,7 +30,7 @@ router.put('/edit/:id',async(req,res)=>{
     const teacher = await Teacher.findById(req.params.id);
     try {
       if(teacher && teacher.Admin){
-        const resp = await Classroom.findByIdAndUpdate(req.body.Id,{$set:req.body});
+        const resp = await classroom.findByIdAndUpdate(req.body.Id,{$set:req.body});
         res.send(resp);
       }
       else{
@@ -44,7 +46,7 @@ router.delete('/:id',async(req,res)=>{
     const teacher = await Teacher.findById(req.params.id);
     try {
       if(teacher && teacher.Admin){
-         await Classroom.findByIdAndDelete(req.body.userId);
+         await classroom.findByIdAndDelete(req.body.userId);
         res.send("Classroom Deleted Sucessfully");
       }
       else{
@@ -57,16 +59,17 @@ router.delete('/:id',async(req,res)=>{
 
 // Create An Attendence Room
 router.post('/create/room/:id',async(req,res)=>{
-     try{
-      const attendence = new Attendence({
-        userId:req.params.id,
-        AttendenceId:req.body.AttendenceId
-      });
-      const resp = await attendence.save();
-      req.send(resp);
-     }catch (error){
-      res.send(error);
-     }
+  const Classroom = await classroom.findById(req.params.id);
+    try{
+     const attendence = new Attendence({
+       RoomAttendenceId:req.params.id
+     });
+     await Classroom.updateOne({$push:{Attendence:attendence._id}});
+     const resp = await attendence.save();
+     req.send("Attendence Section Is Created Sucessfully...");
+    }catch (error){
+     res.send(error);
+    }
 });
 
 module.exports = router;

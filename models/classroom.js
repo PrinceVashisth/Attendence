@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const ClassRoomSchema = mongoose.Schema({
-   userId:{
+   AdminTeacherId:{
     type:String,
     required:true
    },

@@ -1,12 +1,8 @@
 const mongoose =require('mongoose');
 const AttendenceSchema = mongoose.Schema({
-     userId:{
+     RoomAttendenceId:{
       type:String,
       required:true
-     },
-     AttendenceId:{
-        type:String,
-        required:true
      },
       Present:Array
 },{timestamps:true});
