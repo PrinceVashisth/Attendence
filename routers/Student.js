@@ -42,10 +42,10 @@ router.put('/Give/:id',async(req,res)=>{
 
 
 // Get Attendence of a Student For a Perticular Class
-router.get('/getAttendence/classroom/:id',async(req,res)=>{
+router.get('/getAttendence/classroom/:userId/:id',async(req,res)=>{
    let TotalAttendence=[];
    try{
-     const student = await Student.findById(req.body.userId);
+     const student = await Student.findById(req.params.userId);
      const Class = await classroom.findById(req.params.id); 
      for(let count=0;count<Class.Attendence.length;count++){
         const getAttendence = await Attendence.findById(Class.Attendence[count]); 
@@ -62,11 +62,11 @@ router.get('/getAttendence/classroom/:id',async(req,res)=>{
 
 
 // Get Attendence for a Stuudent in All Classrooms  
-router.get('/getAttendence/classroom',async(req,res)=>{
+router.get('/getAttendence/classroom/:id',async(req,res)=>{
    let rooms=[];
    let TotalAttendence=[];
     try{
-      const student = await Student.findById(req.body.userId);
+      const student = await Student.findById(req.params.id);
       for(let count=0;count<student.ClassRooms.length;count++){
        const room = await classroom.findById(student.ClassRooms[count]);
        rooms.push(room);
