@@ -1,5 +1,10 @@
 const mongoose = require('mongoose');
 const TeacherSchema = mongoose.Schema({
+   Email:{
+      type:String,
+      required:true,
+      unique:true
+   },
    Username:{
       type:String,
       required:true

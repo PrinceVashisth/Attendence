@@ -1,5 +1,10 @@
 const mongoose = require('mongoose');
 const StudentSchema = mongoose.Schema({
+   Email:{
+      type:String,
+      required:true,
+      unique:true
+   },
    College_Id:{
       type:String,
       required:true,

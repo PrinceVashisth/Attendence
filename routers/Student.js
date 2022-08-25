@@ -1,7 +1,24 @@
 const router = require('express').Router();
+const bcrypt = require('bcryptjs');
 const classroom = require('../models/classroom');
 const Student = require('../models/Student');
 const Attendence = require('../models/Attendence');
+
+// Edit A Student Details
+router.put('/editStudent',async(req,res)=>{
+      const email = req.query.email;
+      const userId = req.query.id;
+      if(email){
+         const salt = await bcrypt.genSalt(10);
+         const newHasshedPassword = await bcrypt.hash(req.body.password,salt);
+         const S = await Student.findOneAndUpdate({Email:email},{$set:{Password:newHasshedPassword}});
+         res.send(S);  
+      }else{
+         const S = await Student.findById(userId);
+         const resp = S.updateOne({$set:req.body});
+         res.send(resp);
+      }
+});
 
 // Join a Classroom By Student 
 router.put("/:id",async(req,res)=>{

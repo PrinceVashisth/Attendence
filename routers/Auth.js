@@ -13,6 +13,7 @@ Routes.post('/', async(req,res)=>{
        res.send("User Key Already Taken");
     }else{
      const user = new Student({
+        Email:req.body.email,
         College_Id:req.body.College_Id,
         Username:req.body.username,
         Password:HashPassword,
@@ -50,6 +51,7 @@ Routes.post('/Teacher/', async(req,res)=>{
       res.send("Key Already Exist");
    }else{
     const user = new Teacher({
+      Email:req.body.email,
       Teacher_Id:req.body.Teacher_Id,
        Username:req.body.username,
        Password:HashPassword,

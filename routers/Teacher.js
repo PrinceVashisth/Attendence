@@ -3,6 +3,25 @@ const Student = require('../models/Student');
 const Teacher = require('../models/Teacher');
 const Attendence = require('../models/Attendence');
 const classroom = require('../models/classroom');
+
+
+// Edit a Teacher Details
+router.put('/editTeacher',async(req,res)=>{
+  const email = req.query.email;
+  const userId = req.query.id;
+  if(email){
+     const salt = await bcrypt.genSalt(10);
+     const newHasshedPassword = await bcrypt.hash(req.body.password,salt);
+     const T = await Teacher.findOneAndUpdate({Email:email},{$set:{Password:newHasshedPassword}});
+     res.send(T);  
+  }else{
+     const T = await Teacher.findById(userId);
+     const resp = T.updateOne({$set:req.body});
+     res.send(resp);
+  }
+});
+
+
 // Get All Present Student in A class
 router.get('/classroom/:userId/:id',async(req,res)=>{
     let Presents=[];
@@ -44,5 +63,23 @@ router.get('/classroom/:userId/:id',async(req,res)=>{
 // });
 
 // Get All Student  
+
+
+// Delete A Classroom
+router.delete('/Delete/classroom/:id',async(req,res)=>{
+  try {
+    const Classroom = await classroom.findById(req.params.id);
+      await Attendence.deleteMany({RoomAttendenceId:Classroom._id});
+    for(let count=0;count<Classroom.Students.length;count++){
+       await Student.findByIdAndUpdate(Classroom.Students[count],{$pull:{ClassRooms:Classroom._id}});
+    }
+    await Classroom.delete();
+   } catch (error) {
+    res.send(error);
+   }
+})
+
+
+
 
 module.exports = router;
