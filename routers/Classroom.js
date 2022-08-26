@@ -65,7 +65,7 @@ router.post('/create/room/:id',async(req,res)=>{
        RoomAttendenceId:req.params.id
      });
      await Classroom.updateOne({$push:{Attendence:attendence._id}});
-     const resp = await attendence.save();
+     await attendence.save();
      req.send("Attendence Section Is Created Sucessfully...");
     }catch (error){
      res.send(error);

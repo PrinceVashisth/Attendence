@@ -73,7 +73,9 @@ router.delete('/Delete/classroom/:id',async(req,res)=>{
     for(let count=0;count<Classroom.Students.length;count++){
        await Student.findByIdAndUpdate(Classroom.Students[count],{$pull:{ClassRooms:Classroom._id}});
     }
+    await Teacher.findByIdAndUpdate(Classroom.AdminTeacherId,{$pull:{ClassRooms:Classroom._id}});
     await Classroom.delete();
+    res.send("Classroom Deleted Sucessfully...");
    } catch (error) {
     res.send(error);
    }
