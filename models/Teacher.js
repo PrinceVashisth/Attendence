@@ -19,6 +19,8 @@ const TeacherSchema = mongoose.Schema({
         required:true
      },
    ClassRooms:Array,
+   resetToken:String,
+   Expire:Date,
    Admin:{
       type:Boolean,
       default:true

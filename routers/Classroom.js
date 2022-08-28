@@ -8,7 +8,7 @@ router.post('/:id', async(req,res)=>{
       const Room = await classroom.findOne({RoomId:req.body.RoomId});
       const teacher = await Teacher.findById(req.params.id);
       if(Room){
-        res.send("RoomId Is Already In Use");
+        res.json({status:false,msg:"RoomId Is Already In Use"});
       }else{
         try { 
         const NewRoom = new classroom({
@@ -16,11 +16,11 @@ router.post('/:id', async(req,res)=>{
             AdminTeacherId:req.params.id,
             RoomId:req.body.RoomId,
         });       
-            const data = await NewRoom.save();
+           await NewRoom.save();
            await teacher.updateOne({$push:{ClassRooms:data._id}});
-            res.send(data);
+           res.json({status:true,msg:"room is created Sucessfully"});
         } catch (error) {
-            res.send(error);
+          res.json({status:false,msg:"Somthing Went Wrong"});
         }
       }
 })
@@ -30,14 +30,14 @@ router.put('/edit/:id',async(req,res)=>{
     const teacher = await Teacher.findById(req.params.id);
     try {
       if(teacher && teacher.Admin){
-        const resp = await classroom.findByIdAndUpdate(req.body.Id,{$set:req.body});
-        res.send(resp);
+        await classroom.findByIdAndUpdate(req.body.Id,{$set:req.body});
+        res.json({status:true,msg:"Classroom Edited Sucessfully..."});
       }
       else{
-        res.send("You are Not Allowed To Change");
+        res.json({status:false,msg:"You can not edit details of Room"});
       }
     } catch (error) {
-      res.send(error);
+      res.json({status:false,msg:"somthing went Wrong"});
     }
 });
 
@@ -47,13 +47,14 @@ router.delete('/:id',async(req,res)=>{
     try {
       if(teacher && teacher.Admin){
          await classroom.findByIdAndDelete(req.body.userId);
-        res.send("Classroom Deleted Sucessfully");
+         res.json({status:true,msg:"Room Is Delete Sucessfully"});
       }
       else{
-        res.send("You are Not Allowed To Delete Classroom");
+        res.json({status:false,msg:"You are Not Allowed To Delete Classroom"});
       }
     } catch (error) {
-      res.send(error);
+      res.json({status:false,msg:"Somthing went Wrong"});
+      
     }
 });
 
@@ -66,9 +67,10 @@ router.post('/create/room/:id',async(req,res)=>{
      });
      await Classroom.updateOne({$push:{Attendence:attendence._id}});
      await attendence.save();
-     req.send("Attendence Section Is Created Sucessfully...");
+     res.json({status:true,msg:"Attendence Section Is Created Sucessfully..."});
+   
     }catch (error){
-     res.send(error);
+      res.json({status:false,msg:"Somthing went Wrong"});
     }
 });
 

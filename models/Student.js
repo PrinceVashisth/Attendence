@@ -18,6 +18,8 @@ const StudentSchema = mongoose.Schema({
       type:String,
       required:true
      },
+   resetToken:String,
+   Expire:Date,  
    Admin:{
       type:Boolean,
       default:false

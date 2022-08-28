@@ -3,26 +3,54 @@ const Student = require('../models/Student');
 const Teacher = require('../models/Teacher');
 const Attendence = require('../models/Attendence');
 const classroom = require('../models/classroom');
-
-
-// Edit a Teacher Details
-router.put('/editTeacher',async(req,res)=>{
-  const email = req.query.email;
-  const userId = req.query.id;
-  if(email){
-     const salt = await bcrypt.genSalt(10);
-     const newHasshedPassword = await bcrypt.hash(req.body.password,salt);
-     const T = await Teacher.findOneAndUpdate({Email:email},{$set:{Password:newHasshedPassword}});
-     res.send(T);  
-  }else{
-     const T = await Teacher.findById(userId);
-     const resp = T.updateOne({$set:req.body});
-     res.send(resp);
+const crypto = require('crypto');
+// Get a Teacher
+router.get('/:id',async(req,res)=>{
+  try {
+    const teacher = await Teacher.findById(req.params.id);
+    const {Password,...others} = teacher._doc;
+    res.json({status:true,msg:"teacher details",data:others}); 
+  } catch (error) {
+    res.json({status:false,msg:"Somthing Went Wrong"}); 
   }
+})
+
+router.post('/reset-password',async(req,res)=>{
+    try {
+      crypto.randomBytes(32,async(err,buffer)=>{
+        if(err){
+          res.json({status:false,msg:"Somthing Went Wrong"});
+        }else{
+          const Token = buffer.toString('hex');
+         const teacher = await Teacher.findOne({Email:req.body.email});
+         if(teacher){
+            teacher.resetToken=Token;
+            teacher.Expire = Date.now()+360000;
+         }else{
+          res.json({status:false,msg:"user Not Exist With That Email"}); 
+         }
+        }
+      })
+    } catch (error) {
+      res.json({status:false,msg:"Somthing Went Wrong"}); 
+    }
 });
 
 
-// Get All Present Student in A class
+
+// Edit a Teacher Details
+router.put('/editTeacher/:id',async(req,res)=>{ 
+  try {
+    const T = await Teacher.findById(userId);
+    T.updateOne({$set:req.body});
+    res.json({status:true,msg:"user Details Edited Sucessfully"}); 
+  } catch (error) {
+    res.json({status:false,msg:"Somthing Went Wrong"}); 
+  }
+     
+});
+
+// Get All Present OR Absent Student in A class
 router.get('/classroom/:userId/:id',async(req,res)=>{
     let Presents=[];
       try {
@@ -34,7 +62,7 @@ router.get('/classroom/:userId/:id',async(req,res)=>{
          let Students=[];
          for(let person=0;person<Present.length;person++){
             const {Username,College_Id,...others} = await Student.findById(Present[person]);
-            Students.push({Username,College_Id});
+            Students.push({Username,College_Id,"Present":true});
          }
         Presents.push({Students,createdAt});
         }
@@ -43,8 +71,6 @@ router.get('/classroom/:userId/:id',async(req,res)=>{
         res.send(error);
       } 
 });
-
-
 
 // Get ALL Student Present class Wise
 // router.get('/attendence/:id',async(req,res)=>{
@@ -80,8 +106,5 @@ router.delete('/Delete/classroom/:id',async(req,res)=>{
     res.send(error);
    }
 })
-
-
-
 
 module.exports = router;

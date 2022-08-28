@@ -10,7 +10,7 @@ Routes.post('/', async(req,res)=>{
     const HashPassword = await bcrypt.hash(req.body.password,salt);
     const User = await Student.findOne({College_Id:req.body.College_Id});
     if(User){
-       res.send("User Key Already Taken");
+      res.json({status:false,msg:"User Key Already Taken"});
     }else{
      const user = new Student({
         Email:req.body.email,
@@ -19,8 +19,8 @@ Routes.post('/', async(req,res)=>{
         Password:HashPassword,
      })
      try {
-         const User = await user.save();
-         res.send(User);
+          await user.save();
+         res.json({status:true,msg:"Student Register Sucessfully..."});
      } catch (error) {
         console.log(error);
      }
@@ -30,15 +30,16 @@ Routes.post('/', async(req,res)=>{
 // login a Student
 Routes.post('/login',async(req,res)=>{
     try {
-        const user = await Student.findOne({College_Id:req.body.College_Id});
+        const student = await Student.findOne({College_Id:req.body.College_Id});
+        const {Password,...user} = student._doc;
         if(!user){
-           res.send("User Not Found");
+           res.json({status:false,msg:"User Not Found"});
         }
-      const check = await bcrypt.compare(req.body.password,user.Password);
-      if(!check){res.send("Wrong Password");}
-      else{res.send(user);}  
+      const check = await bcrypt.compare(req.body.password,Password);
+      if(!check){res.json({status:false,msg:"Wrong Password"});}
+      else{res.json({status:true,msg:"Student successfully Logged in...",user});}  
      } catch (error) {
-        console.log(error);
+        res.json({status:false,msg:"Somthing Went Wrong..."});
      }    
 }); 
 
@@ -48,7 +49,7 @@ Routes.post('/Teacher/', async(req,res)=>{
    const HashPassword = await bcrypt.hash(req.body.password,salt);
    const User = await Teacher.findOne({Teacher_Id:req.body.Teacher_Id});
    if(User){
-      res.send("Key Already Exist");
+      res.json({status:false,msg:"Key Already Exist"});
    }else{
     const user = new Teacher({
       Email:req.body.email,
@@ -57,10 +58,10 @@ Routes.post('/Teacher/', async(req,res)=>{
        Password:HashPassword,
     })
     try {
-        const User = await user.save();
-        res.send(User);
+        const {Password,...User} = await user.save();
+        res.json({status:true,msg:"Teacher Register Sucessfully..."});
     } catch (error) {
-       console.log(error);
+       res.json({status:false,msg:"Somthing Went Wrong"})
     }
    }
 });
@@ -68,15 +69,16 @@ Routes.post('/Teacher/', async(req,res)=>{
 // Login a Teacher
 Routes.post('/Teacher/login',async(req,res)=>{
    try {
-       const user = await Teacher.findOne({Teacher_Id:req.body.Teacher_Id});
+       const teacher = await Teacher.findOne({Teacher_Id:req.body.Teacher_Id});
+       const {Password,...user} = teacher._doc;
        if(!user){
-          res.send("User Not Found");
+          res.json({status:false,msg:"User Not Found"});
        }
-     const check = await bcrypt.compare(req.body.password,user.Password);
-     if(!check){res.send("Wrong Password");}
-     else{res.send(user);}  
+     const check = await bcrypt.compare(req.body.password,Password);
+     if(!check){res.json({status:false,msg:"Wrong Password"});}
+     else{res.json({status:true,msg:"Sucessfully logged in...",user});}  
     } catch (error) {
-       console.log(error);
+       res.json({status:false,msg:"Somthing went Wrong"})
     }    
 }); 
 

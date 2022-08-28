@@ -4,20 +4,35 @@ const classroom = require('../models/classroom');
 const Student = require('../models/Student');
 const Attendence = require('../models/Attendence');
 
+// Get a Student
+router.get('/:id',async(req,res)=>{
+   try {
+      const student = await Student.findById(req.params.id);
+      const {Password,...others} = student._doc;
+      res.json({status:true,msg:"student details",data:others});
+   } catch (error) {
+      res.json({status:false,msg:"Somthing went Wrong"});
+   }
+})
+
 // Edit A Student Details
 router.put('/editStudent',async(req,res)=>{
       const email = req.query.email;
       const userId = req.query.id;
+      try {
       if(email){
          const salt = await bcrypt.genSalt(10);
          const newHasshedPassword = await bcrypt.hash(req.body.password,salt);
          const S = await Student.findOneAndUpdate({Email:email},{$set:{Password:newHasshedPassword}});
-         res.send(S);  
+         res.json({status:true,msg:"Student Update Sucessfully"}); 
       }else{
          const S = await Student.findById(userId);
-         const resp = S.updateOne({$set:req.body});
-         res.send(resp);
+         S.updateOne({$set:req.body});
+         res.json({status:true,msg:"Student Update Sucessfully"}); 
       }
+   } catch (error) {
+      res.json({status:false,msg:"Somthing Went Wrong"}); 
+   }
 });
 
 // Join a Classroom By Student 
@@ -25,16 +40,17 @@ router.put("/:id",async(req,res)=>{
    try {
       const newroom = await classroom.findOne({RoomId:req.body.RoomId});
    const user = await Student.findById(req.params.id);
-   if(!newroom) res.send("class Room Not Found");
+   if(!newroom) res.json({status:false,msg:"Somthing Went Wrong"}); 
    else if(!newroom.Students.includes(req.params.id)){
       await newroom.updateOne({$push:{Students:req.params.id}});
       await user.updateOne({$push:{ClassRooms:newroom._id}});
-      res.send("You Joined Classroom");
+      res.json({status:true,msg:"You Joined Classroom"}); 
    }else{
-      res.send("Already in classroom");
+      res.json({status:false,msg:"Already in classroom"}); 
+     
    }      
    } catch (error) {
-    res.send(error);  
+      res.json({status:false,msg:"Somthing Went Wrong"}); 
    }
 
 });
@@ -46,12 +62,12 @@ router.put('/Give/:id',async(req,res)=>{
       const student = await Student.findById(req.body.userId);
       if(student.ClassRooms.includes(attendence.RoomAttendenceId) && !attendence.Present.includes(student._id)){
          await attendence.updateOne({$push:{Present:student._id}});
-         res.send("Attendence Mark Sucessfully");
+         res.json({status:true,msg:"Attendence Mark Sucessfully"}); 
       }else{
-         res.send("Not Elegible to Give Attendence");
+         res.json({status:false,msg:"Not Elegible to Give Attendence"}); 
       }
    } catch (error) {
-      res.send(error);
+      res.json({status:false,msg:"Somthing Went Wrong"}); 
    }   
 
 })
@@ -66,14 +82,16 @@ router.get('/getAttendence/classroom/:userId/:id',async(req,res)=>{
      const Class = await classroom.findById(req.params.id); 
      for(let count=0;count<Class.Attendence.length;count++){
         const getAttendence = await Attendence.findById(Class.Attendence[count]); 
+        const {createdAt,...others} = getAttendence;
         if(getAttendence.Present.includes(student._id)){
-          const {createdAt,...others} = getAttendence;
-          TotalAttendence.push(createdAt);   
+          TotalAttendence.push({createdAt,"Present":true});   
+         }else{
+           TotalAttendence.push({createdAt,"Present":false});   
         }
      }
-     res.send(TotalAttendence);
+     res.json({status:true,msg:"Attendence Data",data:TotalAttendence}); 
    }catch (error){
-     res.send(error);
+      res.json({status:false,msg:"Somthing Went Wrong"}); 
    }
 });
 
@@ -95,15 +113,18 @@ router.get('/getAttendence/classroom/:id',async(req,res)=>{
          if(getAttendence){
             if(getAttendence.Present.includes(student._id)){
               const {createdAt,...others} = getAttendence;
-              ClassroomAttendence.push(createdAt);
+              ClassroomAttendence.push({createdAt,"Present":true});
+            }else{
+               ClassroomAttendence.push({createdAt,"Present":false});
             }
          }
       }
       TotalAttendence.push(ClassroomAttendence);
      }
-      res.send(TotalAttendence);
+     res.json({status:true,msg:"Attendence Data",data:TotalAttendence}); 
    }catch (error){
-      res.send(error);
+      res.json({status:false,msg:"Somthing Went Wrong"}); 
+
    }
 });
 
@@ -115,9 +136,9 @@ router.put("/leave/:id",async(req,res)=>{
    if(newroom.Students.includes(req.params.id)){
       await newroom.updateOne({$pull:{Students:req.params.id}});
       await user.updateOne({$pull:{ClassRooms:newroom._id}});
-      res.send("You Left Classroom");
+      res.json({status:true,msg:"You Left Classroom"}); 
    }else{
-      res.send("You Already Left classroom");
+      res.json({status:false,msg:"You Already Left classroom"}); 
    }    
 });
 
