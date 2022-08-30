@@ -8,7 +8,8 @@ const classroom = require('../models/classroom');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
-const env = require('dotenv');
+const env = require('dotenv').config();
+
 // Get a Teacher
 router.get('/:id',async(req,res)=>{
   try {
@@ -21,33 +22,31 @@ router.get('/:id',async(req,res)=>{
 })
 
 router.post('/reset-password',async(req,res)=>{
-    try {
-      crypto.randomBytes(32,async(err,buffer)=>{
+  try {
+    crypto.randomBytes(32,async(err,buffer)=>{
         if(err){
           res.json({status:false,msg:"Somthing Went Wrong"});
         }else{
-          const Token = buffer.toString('hex');
-         const teacher = await Teacher.findOne({Email:req.body.email});
+          const Token = buffer.toString("hex");
+         let teacher = await Teacher.findOne({Email:req.body.email});
          if(teacher){
-          if(!teacher.resetToken ){
             teacher.resetToken=Token;
-            teacher.Expire = Date.now()+360000;
+            teacher.Expire = Date.now()+3600000;
             await teacher.save();
-          }
-         const transpoter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user:'vashisthPrince9@gmail.com',
-            pass: 'iauikhwnhxuozeja'
+            const transpoter = nodemailer.createTransport({
+              service: 'gmail',
+              auth: {
+                user:process.env.USER_EMAIL,
+                pass:process.env.USER_PASSWORD
           }
          });   
             transpoter.sendMail({
               to:teacher.Email,
-              from:'vashisthPrince9@gmail.com',
+              from:process.env.USER_EMAIL,
               subject:'Reset Password',
               html:`
               <h5>You Requested For Password Reset</h5>
-              <p> Follow this <a href="http://localhost:3000/reset/${teacher.resetToken}/${teacher._id}">link</a> to reset your password </p>
+              <p> Follow this <a href="http://localhost:3000/reset/${Token}/${teacher._id}">link</a> to reset your password </p>
               `
             }); 
             
@@ -66,7 +65,7 @@ router.post('/reset/:Token/:id',async(req,res)=>{
    try {
      const teacher = await Teacher.findById(req.params.id);
      if(teacher.resetToken === req.params.Token && teacher.Expire > Date.now()){
-      const salt =await bcrypt.genSalt(10);
+      const salt = await bcrypt.genSalt(10);
       const NewHasshedPassword = await bcrypt.hash(req.body.password,salt);
       await teacher.updateOne({$set:{Password:NewHasshedPassword}});
       res.json({status:true,msg:"Password Change Sucessfully..."}); 
