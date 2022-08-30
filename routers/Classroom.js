@@ -3,6 +3,16 @@ const Teacher = require('../models/Teacher');
 const Attendence = require('../models/Attendence');
 const classroom = require('../models/classroom');
 
+
+router.get('/:id',async(req,res)=>{
+  try {
+    const Class = await classroom.findById(req.params.id);
+    res.json({status:true,msg:"get a classroom",data:Class});    
+  } catch (error) {
+    res.json({status:false,msg:"Somthing went Wrong"});
+  }
+})
+
 // Create a Classroom
 router.post('/:id', async(req,res)=>{
       const Room = await classroom.findOne({RoomId:req.body.RoomId});
@@ -17,7 +27,7 @@ router.post('/:id', async(req,res)=>{
             RoomId:req.body.RoomId,
         });       
            await NewRoom.save();
-           await teacher.updateOne({$push:{ClassRooms:data._id}});
+           await teacher.updateOne({$push:{ClassRooms:NewRoom._id}});
            res.json({status:true,msg:"room is created Sucessfully"});
         } catch (error) {
           res.json({status:false,msg:"Somthing Went Wrong"});
